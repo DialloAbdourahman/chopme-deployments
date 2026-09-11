@@ -22,3 +22,5 @@ module "admin_website_bucket" {
   bucket_name = var.admin_website_bucket_name
   environment = var.environment
 }
+
+

@@ -22,3 +22,4 @@ variable "admin_website_bucket_name" {
   description = "The bucket name of the admin website"
   type        = string
 }
+
