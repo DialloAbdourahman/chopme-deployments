@@ -23,3 +23,17 @@ variable "admin_website_bucket_name" {
   type        = string
 }
 
+variable "vpc_name" {
+  description = "Name of the vpc"
+  type        = string
+}
+
+variable "vpc_cidr" {
+  description = "Name of the VPC"
+  type        = string
+}
+
+variable "az1" {
+  description = "Name of the VPC"
+  type        = string
+}
