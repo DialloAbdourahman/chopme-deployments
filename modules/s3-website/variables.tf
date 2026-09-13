@@ -19,3 +19,9 @@ variable "error_document" {
   type        = string
   default     = "index.html"
 }
+
+variable "force_destroy" {
+  description = "Website error document"
+  type        = bool
+}
+

@@ -5,6 +5,8 @@ resource "aws_s3_bucket" "this" {
     Name        = var.bucket_name
     Environment = var.environment
   }
+
+  force_destroy = var.force_destroy
 }
 
 resource "aws_s3_bucket_website_configuration" "this" {
