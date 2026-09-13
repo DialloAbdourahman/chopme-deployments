@@ -56,6 +56,9 @@ resource "aws_docdb_cluster" "this" {
   final_snapshot_identifier = var.final_snapshot_identifier
   deletion_protection       = var.deletion_protection
 
+  storage_encrypted = var.storage_encrypted
+  kms_key_id        = var.kms_key_id
+
   tags = {
     Name        = var.name
     Environment = var.environment

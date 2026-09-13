@@ -157,3 +157,9 @@ variable "docdb_final_snapshot_identifier" {
   default     = null
 }
 
+variable "docdb_encrypt_storage" {
+  description = "Name of the final snapshot taken on destroy (required when docdb_skip_final_snapshot is false)"
+  type        = string
+  default     = null
+}
+

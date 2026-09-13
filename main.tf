@@ -300,4 +300,6 @@ module "documentdb" {
   skip_final_snapshot       = var.docdb_skip_final_snapshot
   final_snapshot_identifier = var.docdb_final_snapshot_identifier
   deletion_protection       = var.docdb_deletion_protection
+
+  storage_encrypted = var.docdb_encrypt_storage
 }

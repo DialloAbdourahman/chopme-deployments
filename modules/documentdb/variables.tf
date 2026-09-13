@@ -81,3 +81,15 @@ variable "deletion_protection" {
   type        = bool
   default     = false
 }
+
+variable "storage_encrypted" {
+  description = "Encrypt the cluster storage at rest"
+  type        = bool
+  default     = true
+}
+
+variable "kms_key_id" {
+  description = "KMS key ARN for storage encryption (null uses the AWS-managed key)"
+  type        = string
+  default     = null
+}
