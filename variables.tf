@@ -93,6 +93,11 @@ variable "force_destroy" {
   type        = bool
 }
 
+variable "s3_public_bucket_name" {
+  description = "Bucket used by the backend for restaurant/menu images"
+  type        = string
+}
+
 variable "docdb_name" {
   description = "DocumentDB master username"
   type        = string
@@ -135,6 +140,13 @@ variable "docdb_preferred_maintenance_window" {
 }
 
 variable "docdb_skip_final_snapshot" {
-  description = "DocumentDB instance class"
+  description = "Skip the final snapshot when destroying the DocumentDB cluster (true for dev, false for prod)"
   type        = bool
+  default     = true
+}
+
+variable "docdb_final_snapshot_identifier" {
+  description = "Name of the final snapshot taken on destroy (required when docdb_skip_final_snapshot is false)"
+  type        = string
+  default     = null
 }

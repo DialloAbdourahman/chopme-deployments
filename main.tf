@@ -82,22 +82,31 @@ module "chopme_backend_role" {
     "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
   ]
 
-  # inline_policies = {
-  #   "my-policies" = jsonencode({
-  #     Version = "2012-10-17"
-  #     Statement = [
-  #       {
-  #         Effect = "Allow"
-  #         Action = [
-  #           "s3:GetObject",
-  #           "s3:PutObject",
-  #           "s3:DeleteObject"
-  #         ]
-  #         Resource = "arn:aws:s3:::BUCKET_NAME/*"
-  #       }
-  #     ]
-  #   })
-  # }
+ 
+}
+
+# Role assumed by the running containers (task role)
+module "chopme_backend_task_role" {
+  source            = "./modules/iam-role"
+  name              = "backend-task-role"
+  service_principal = "ecs-tasks.amazonaws.com"
+
+  inline_policies = {
+    "s3-images-access" = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject",
+            "s3:PutObject",
+            "s3:DeleteObject"
+          ]
+          Resource = "${module.backend_images_bucket.bucket_arn}/*"
+        }
+      ]
+    })
+  }
 }
 
 # ============================================================
@@ -214,6 +223,20 @@ module "ecs_chopme_backend" {
   security_group_ids = [module.backend_security_group.security_group_id]
 
   ecs_target_group_arn = module.backend_target_group.target_group_arn
+  task_role_arn        = module.chopme_backend_task_role.role_arn
+}
+
+# ============================================================
+# S3 BUCKET (backend images, private - presigned URL access)
+# ============================================================
+module "backend_images_bucket" {
+  source = "./modules/s3"
+
+  bucket_name  = var.s3_public_bucket_name
+  environment  = terraform.workspace
+  force_destroy = var.force_destroy
+
+  cors_allowed_origins = ["*"]
 }
 
 # ============================================================
@@ -274,5 +297,6 @@ module "documentdb" {
   preferred_backup_window      = var.docdb_preferred_backup_window
   preferred_maintenance_window = var.docdb_preferred_maintenance_window
 
-  skip_final_snapshot = var.docdb_skip_final_snapshot
+  skip_final_snapshot       = var.docdb_skip_final_snapshot
+  final_snapshot_identifier = var.docdb_final_snapshot_identifier
 }

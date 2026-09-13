@@ -51,6 +51,12 @@ variable "execution_role_arn" {
   type        = string
 }
 
+variable "task_role_arn" {
+  description = "IAM role ARN assumed by the running containers"
+  type        = string
+  default     = null
+}
+
 variable "aws_region" {
   description = "AWS region used by the awslogs driver"
   type        = string
