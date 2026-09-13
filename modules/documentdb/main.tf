@@ -54,6 +54,7 @@ resource "aws_docdb_cluster" "this" {
 
   skip_final_snapshot       = var.skip_final_snapshot
   final_snapshot_identifier = var.final_snapshot_identifier
+  deletion_protection       = var.deletion_protection
 
   tags = {
     Name        = var.name

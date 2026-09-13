@@ -75,3 +75,9 @@ variable "final_snapshot_identifier" {
   type        = string
   default     = null
 }
+
+variable "deletion_protection" {
+  description = "Prevent the cluster from being deleted"
+  type        = bool
+  default     = false
+}

@@ -145,8 +145,15 @@ variable "docdb_skip_final_snapshot" {
   default     = true
 }
 
+variable "docdb_deletion_protection" {
+  description = "Skip the final snapshot when destroying the DocumentDB cluster (true for dev, false for prod)"
+  type        = bool
+  default     = true
+}
+
 variable "docdb_final_snapshot_identifier" {
   description = "Name of the final snapshot taken on destroy (required when docdb_skip_final_snapshot is false)"
   type        = string
   default     = null
 }
+
