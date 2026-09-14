@@ -25,3 +25,15 @@ variable "cors_allowed_origins" {
   type        = list(string)
   default     = ["*"]
 }
+
+variable "block_public_access" {
+  description = "Block all public access to the bucket (set false to allow public bucket policies/ACLs)"
+  type        = bool
+  default     = true
+}
+
+variable "bucket_policy" {
+  description = "Optional bucket policy JSON document to attach to the bucket"
+  type        = string
+  default     = null
+}

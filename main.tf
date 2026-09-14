@@ -227,7 +227,7 @@ module "ecs_chopme_backend" {
 }
 
 # ============================================================
-# S3 BUCKET (backend images, private - presigned URL access)
+# S3 BUCKET (backend images, public read via bucket policy)
 # ============================================================
 module "backend_images_bucket" {
   source = "./modules/s3"
@@ -237,6 +237,20 @@ module "backend_images_bucket" {
   force_destroy = var.force_destroy
 
   cors_allowed_origins = ["*"]
+
+  block_public_access = false
+  bucket_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "PublicRead"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "arn:aws:s3:::${var.s3_public_bucket_name}/*"
+      }
+    ]
+  })
 }
 
 # ============================================================
