@@ -157,9 +157,15 @@ variable "docdb_final_snapshot_identifier" {
   default     = null
 }
 
-variable "docdb_encrypt_storage" {
-  description = "Name of the final snapshot taken on destroy (required when docdb_skip_final_snapshot is false)"
+variable "docdb_snapshot_identifier" {
+  description = "Snapshot identifier to restore the DocumentDB cluster from (null creates a fresh cluster)"
   type        = string
   default     = null
+}
+
+variable "docdb_encrypt_storage" {
+  description = "Encrypt the DocumentDB cluster storage at rest"
+  type        = bool
+  default     = true
 }
 

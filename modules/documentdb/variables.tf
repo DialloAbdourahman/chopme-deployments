@@ -88,6 +88,12 @@ variable "storage_encrypted" {
   default     = true
 }
 
+variable "snapshot_identifier" {
+  description = "Snapshot identifier to restore the cluster from (null creates a fresh cluster)"
+  type        = string
+  default     = null
+}
+
 variable "kms_key_id" {
   description = "KMS key ARN for storage encryption (null uses the AWS-managed key)"
   type        = string

@@ -59,6 +59,8 @@ resource "aws_docdb_cluster" "this" {
   storage_encrypted = var.storage_encrypted
   kms_key_id        = var.kms_key_id
 
+  snapshot_identifier = var.snapshot_identifier
+
   tags = {
     Name        = var.name
     Environment = var.environment
