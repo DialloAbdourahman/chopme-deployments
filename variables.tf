@@ -18,6 +18,31 @@ variable "admin_website_bucket_name" {
   type        = string
 }
 
+variable "domain_name" {
+  description = "Route53 hosted zone name (e.g. chopmeapp.com)"
+  type        = string
+}
+
+variable "client_website_domains" {
+  description = "Custom domains for the client website (e.g. [\"client.dev.chopmeapp.com\"])"
+  type        = list(string)
+}
+
+variable "restaurant_website_domains" {
+  description = "Custom domains for the restaurant website (e.g. [\"restaurant.dev.chopmeapp.com\"])"
+  type        = list(string)
+}
+
+variable "admin_website_domains" {
+  description = "Custom domains for the admin website (e.g. [\"admin.dev.chopmeapp.com\"])"
+  type        = list(string)
+}
+
+variable "api_domain" {
+  description = "Custom domain for the backend API / ALB (e.g. api.dev.chopmeapp.com)"
+  type        = string
+}
+
 variable "vpc_name" {
   description = "Name of the vpc"
   type        = string

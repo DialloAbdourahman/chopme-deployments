@@ -9,12 +9,9 @@ variable "alb_name" {
   type = string
 }
 
-variable "alb_port" {
-  type = number
-}
-
-variable "alb_protocol" {
-  type = string
+variable "certificate_arn" {
+  description = "ACM certificate ARN (same region as the ALB) for the HTTPS listener"
+  type        = string
 }
 
 variable "security_groups_id" {

@@ -25,3 +25,15 @@ variable "force_destroy" {
   type        = bool
 }
 
+variable "domain_aliases" {
+  description = "Custom domain aliases for the CloudFront distribution (requires certificate_arn)"
+  type        = list(string)
+  default     = []
+}
+
+variable "certificate_arn" {
+  description = "ACM certificate ARN (must be in us-east-1) covering the domain alias"
+  type        = string
+  default     = null
+}
+

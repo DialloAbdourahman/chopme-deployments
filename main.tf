@@ -6,6 +6,12 @@ provider "aws" {
   region = var.aws_region
 }
 
+# CloudFront certificates must be created in us-east-1
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
+
 # ============================================================
 # VPC, SUBNETS and ROUTE TABLES
 # ============================================================
@@ -102,7 +108,7 @@ module "chopme_backend_task_role" {
             "s3:PutObject",
             "s3:DeleteObject"
           ]
-          Resource = "${module.backend_images_bucket.bucket_arn}/*"
+          Resource = "${module.backend_public_bucket.bucket_arn}/*"
         }
       ]
     })
@@ -125,6 +131,12 @@ module "alb_security_group" {
       from_port   = 80
       ip_protocol = "tcp"
       to_port     = 80
+    },
+    {
+      cidr_ipv4   = "0.0.0.0/0"
+      from_port   = 443
+      ip_protocol = "tcp"
+      to_port     = 443
     }
   ]
   egress_rules = [
@@ -167,6 +179,9 @@ module "client_website_bucket" {
   environment = terraform.workspace
 
   force_destroy = var.force_destroy
+
+  domain_aliases  = var.client_website_domains
+  certificate_arn = aws_acm_certificate_validation.websites.certificate_arn
 }
 
 module "restaurant_website_bucket" {
@@ -176,6 +191,9 @@ module "restaurant_website_bucket" {
   environment = terraform.workspace
 
   force_destroy = var.force_destroy
+
+  domain_aliases  = var.restaurant_website_domains
+  certificate_arn = aws_acm_certificate_validation.websites.certificate_arn
 }
 
 module "admin_website_bucket" {
@@ -185,6 +203,148 @@ module "admin_website_bucket" {
   environment = terraform.workspace
 
   force_destroy = var.force_destroy
+
+  domain_aliases  = var.admin_website_domains
+  certificate_arn = aws_acm_certificate_validation.websites.certificate_arn
+}
+
+# ============================================================
+# DNS + CERTIFICATE (Route53 hosted zone must already exist)
+# ============================================================
+data "aws_route53_zone" "main" {
+  name         = var.domain_name
+  private_zone = false
+}
+
+locals {
+  all_website_domains = concat(
+    var.client_website_domains,
+    var.restaurant_website_domains,
+    var.admin_website_domains,
+  )
+}
+
+# One cert covering all website domains
+resource "aws_acm_certificate" "websites" {
+  provider = aws.us_east_1
+
+  domain_name               = local.all_website_domains[0]
+  subject_alternative_names = slice(local.all_website_domains, 1, length(local.all_website_domains))
+
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_route53_record" "websites_cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.websites.domain_validation_options : dvo.domain_name => dvo
+  }
+
+  zone_id         = data.aws_route53_zone.main.zone_id
+  name            = each.value.resource_record_name
+  type            = each.value.resource_record_type
+  records         = [each.value.resource_record_value]
+  ttl             = 60
+  allow_overwrite = true
+}
+
+resource "aws_acm_certificate_validation" "websites" {
+  provider = aws.us_east_1
+
+  certificate_arn         = aws_acm_certificate.websites.arn
+  validation_record_fqdns = [for r in aws_route53_record.websites_cert_validation : r.fqdn]
+}
+
+locals {
+  website_distributions = {
+    client     = module.client_website_bucket
+    restaurant = module.restaurant_website_bucket
+    admin      = module.admin_website_bucket
+  }
+
+  website_domains = {
+    client     = var.client_website_domains
+    restaurant = var.restaurant_website_domains
+    admin      = var.admin_website_domains
+  }
+
+  website_alias_records = merge([
+    for site, domains in local.website_domains : merge([
+      for d in domains : {
+        "${site}-${d}-a" = {
+          domain = d
+          type   = "A"
+          target = local.website_distributions[site].cloudfront_domain_name
+          zone   = local.website_distributions[site].cloudfront_hosted_zone_id
+        }
+        "${site}-${d}-aaaa" = {
+          domain = d
+          type   = "AAAA"
+          target = local.website_distributions[site].cloudfront_domain_name
+          zone   = local.website_distributions[site].cloudfront_hosted_zone_id
+        }
+      }
+    ]...)
+  ]...)
+}
+
+resource "aws_route53_record" "website_aliases" {
+  for_each = local.website_alias_records
+
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = each.value.domain
+  type    = each.value.type
+
+  alias {
+    name                   = each.value.target
+    zone_id                = each.value.zone
+    evaluate_target_health = false
+  }
+}
+
+# ALB cert lives in the ALB's region (not us-east-1)
+resource "aws_acm_certificate" "api" {
+  domain_name       = var.api_domain
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_route53_record" "api_cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.api.domain_validation_options : dvo.domain_name => dvo
+  }
+
+  zone_id         = data.aws_route53_zone.main.zone_id
+  name            = each.value.resource_record_name
+  type            = each.value.resource_record_type
+  records         = [each.value.resource_record_value]
+  ttl             = 60
+  allow_overwrite = true
+}
+
+resource "aws_acm_certificate_validation" "api" {
+  certificate_arn         = aws_acm_certificate.api.arn
+  validation_record_fqdns = [for r in aws_route53_record.api_cert_validation : r.fqdn]
+}
+
+resource "aws_route53_record" "api" {
+  for_each = toset(["A", "AAAA"])
+
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = var.api_domain
+  type    = each.value
+
+  alias {
+    name                   = module.alb.alb_dns_name
+    zone_id                = module.alb.alb_zone_id
+    evaluate_target_health = false
+  }
 }
 
 # ============================================================
@@ -229,7 +389,7 @@ module "ecs_chopme_backend" {
 # ============================================================
 # S3 BUCKET (backend images, public read via bucket policy)
 # ============================================================
-module "backend_images_bucket" {
+module "backend_public_bucket" {
   source = "./modules/s3"
 
   bucket_name  = var.s3_public_bucket_name
@@ -271,8 +431,7 @@ module "alb" {
   source = "./modules/alb"
 
   alb_name           = "chopme-${terraform.workspace}-alb"
-  alb_port           = 80
-  alb_protocol       = "HTTP"
+  certificate_arn    = aws_acm_certificate_validation.api.certificate_arn
   security_groups_id = [module.alb_security_group.security_group_id]
   subnet_ids = [
     module.public_subnet_az1.subnet_id,

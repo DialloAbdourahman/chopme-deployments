@@ -12,15 +12,33 @@ resource "aws_lb" "this" {
   }
 }
 
-// Add the listener (attach TG to ALB)
-resource "aws_lb_listener" "this" {
+// HTTP listener: redirect everything to HTTPS
+resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.this.arn
-  port              = var.alb_port
-  protocol          = var.alb_protocol
-  
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+// HTTPS listener: terminates TLS and carries the routing rules
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.this.arn
+  port              = 443
+  protocol          = "HTTPS"
+  certificate_arn   = var.certificate_arn
+
   default_action {
     type = "fixed-response"
-    
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Default route - no specific service configured"
@@ -31,7 +49,7 @@ resource "aws_lb_listener" "this" {
 
 resource "aws_lb_listener_rule" "this" {
   count = length(var.routes)
-  listener_arn = aws_lb_listener.this.arn
+  listener_arn = aws_lb_listener.https.arn
   priority     = 100 + count.index
 
   action {
