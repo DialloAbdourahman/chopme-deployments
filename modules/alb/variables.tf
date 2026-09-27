@@ -1,6 +1,6 @@
 variable "routes" {
   type = list(object({
-    path = string
+    path             = string
     target_group_arn = string
   }))
 }

@@ -89,3 +89,45 @@ variable "ecs_target_group_arn" {
   type        = string
 }
 
+variable "enable_autoscaling" {
+  description = "Enable ECS service autoscaling"
+  type        = bool
+  default     = true
+}
+
+variable "autoscaling_min_capacity" {
+  description = "Minimum number of tasks when autoscaling"
+  type        = number
+  default     = 2
+}
+
+variable "autoscaling_max_capacity" {
+  description = "Maximum number of tasks when autoscaling"
+  type        = number
+  default     = 6
+}
+
+variable "autoscaling_cpu_target" {
+  description = "Target average CPU utilization percentage for scaling"
+  type        = number
+  default     = 60
+}
+
+variable "autoscaling_memory_target" {
+  description = "Target average memory utilization percentage for scaling"
+  type        = number
+  default     = 70
+}
+
+variable "autoscaling_scale_in_cooldown" {
+  description = "Seconds to wait before scaling in again"
+  type        = number
+  default     = 300
+}
+
+variable "autoscaling_scale_out_cooldown" {
+  description = "Seconds to wait before scaling out again"
+  type        = number
+  default     = 60
+}
+

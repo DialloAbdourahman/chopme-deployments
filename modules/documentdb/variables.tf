@@ -70,12 +70,6 @@ variable "skip_final_snapshot" {
   default     = true
 }
 
-variable "final_snapshot_identifier" {
-  description = "Name of the final snapshot taken on destroy (required when skip_final_snapshot is false)"
-  type        = string
-  default     = null
-}
-
 variable "deletion_protection" {
   description = "Prevent the cluster from being deleted"
   type        = bool

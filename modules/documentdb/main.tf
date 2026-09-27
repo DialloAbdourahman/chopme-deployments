@@ -34,6 +34,10 @@ resource "aws_security_group" "this" {
   }
 }
 
+resource "random_id" "snapshot_suffix" {
+  byte_length = 4
+}
+
 resource "aws_docdb_cluster" "this" {
   cluster_identifier = var.name
 
@@ -53,7 +57,7 @@ resource "aws_docdb_cluster" "this" {
   preferred_maintenance_window = var.preferred_maintenance_window
 
   skip_final_snapshot       = var.skip_final_snapshot
-  final_snapshot_identifier = var.final_snapshot_identifier
+  final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.name}-final-${random_id.snapshot_suffix.hex}"
   deletion_protection       = var.deletion_protection
 
   storage_encrypted = var.storage_encrypted

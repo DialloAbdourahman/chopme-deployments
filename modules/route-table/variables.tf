@@ -3,7 +3,7 @@ variable "vpc_id" {
 }
 
 variable "igw_id" {
-  type = string
+  type    = string
   default = ""
 }
 
@@ -16,7 +16,7 @@ variable "destination_cidr_block" {
 }
 
 variable "nat_gateway_id" {
-  type = string
+  type    = string
   default = ""
 }
 

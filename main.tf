@@ -88,7 +88,7 @@ module "chopme_backend_role" {
     "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
   ]
 
- 
+
 }
 
 # Role assumed by the running containers (task role)
@@ -379,11 +379,19 @@ module "ecs_chopme_backend" {
   execution_role_arn = module.chopme_backend_role.role_arn
   aws_region         = var.aws_region
 
-  subnet_ids         = [module.public_subnet_az1.subnet_id]
+  subnet_ids         = [module.public_subnet_az1.subnet_id, module.public_subnet_az2.subnet_id]
   security_group_ids = [module.backend_security_group.security_group_id]
 
   ecs_target_group_arn = module.backend_target_group.target_group_arn
   task_role_arn        = module.chopme_backend_task_role.role_arn
+
+  enable_autoscaling             = var.ecs_service_autoscaling_enabled
+  autoscaling_min_capacity       = var.ecs_service_autoscaling_min_capacity
+  autoscaling_max_capacity       = var.ecs_service_autoscaling_max_capacity
+  autoscaling_cpu_target         = var.ecs_service_autoscaling_cpu_target
+  autoscaling_memory_target      = var.ecs_service_autoscaling_memory_target
+  autoscaling_scale_in_cooldown  = var.ecs_service_autoscaling_scale_in_cooldown
+  autoscaling_scale_out_cooldown = var.ecs_service_autoscaling_scale_out_cooldown
 }
 
 # ============================================================
@@ -392,8 +400,8 @@ module "ecs_chopme_backend" {
 module "backend_public_bucket" {
   source = "./modules/s3"
 
-  bucket_name  = var.s3_public_bucket_name
-  environment  = terraform.workspace
+  bucket_name   = var.s3_public_bucket_name
+  environment   = terraform.workspace
   force_destroy = var.force_destroy
 
   cors_allowed_origins = ["*"]
@@ -470,11 +478,10 @@ module "documentdb" {
   preferred_backup_window      = var.docdb_preferred_backup_window
   preferred_maintenance_window = var.docdb_preferred_maintenance_window
 
-  skip_final_snapshot       = var.docdb_skip_final_snapshot
-  final_snapshot_identifier = var.docdb_final_snapshot_identifier
+  skip_final_snapshot = var.docdb_skip_final_snapshot
   snapshot_identifier = var.docdb_snapshot_identifier
-  
-  deletion_protection       = var.docdb_deletion_protection
+
+  deletion_protection = var.docdb_deletion_protection
 
   storage_encrypted = var.docdb_encrypt_storage
 

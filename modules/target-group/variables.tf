@@ -15,7 +15,7 @@ variable "target_group_protocol" {
 }
 
 variable "target_group_health_check_path" {
-  type = string
+  type    = string
   default = "/"
 }
 

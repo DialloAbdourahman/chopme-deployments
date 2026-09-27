@@ -48,7 +48,7 @@ resource "aws_lb_listener" "https" {
 }
 
 resource "aws_lb_listener_rule" "this" {
-  count = length(var.routes)
+  count        = length(var.routes)
   listener_arn = aws_lb_listener.https.arn
   priority     = 100 + count.index
 

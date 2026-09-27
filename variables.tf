@@ -113,6 +113,48 @@ variable "ecs_service_desired_count" {
   type        = number
 }
 
+variable "ecs_service_autoscaling_enabled" {
+  description = "Enable autoscaling for the ECS service"
+  type        = bool
+  default     = true
+}
+
+variable "ecs_service_autoscaling_min_capacity" {
+  description = "Minimum number of tasks when autoscaling"
+  type        = number
+  default     = 2
+}
+
+variable "ecs_service_autoscaling_max_capacity" {
+  description = "Maximum number of tasks when autoscaling"
+  type        = number
+  default     = 6
+}
+
+variable "ecs_service_autoscaling_cpu_target" {
+  description = "Target average CPU utilization percentage for scaling"
+  type        = number
+  default     = 60
+}
+
+variable "ecs_service_autoscaling_memory_target" {
+  description = "Target average memory utilization percentage for scaling"
+  type        = number
+  default     = 70
+}
+
+variable "ecs_service_autoscaling_scale_in_cooldown" {
+  description = "Seconds to wait before scaling in again"
+  type        = number
+  default     = 300
+}
+
+variable "ecs_service_autoscaling_scale_out_cooldown" {
+  description = "Seconds to wait before scaling out again"
+  type        = number
+  default     = 60
+}
+
 variable "force_destroy" {
   description = "Name of the cluster"
   type        = bool
@@ -174,12 +216,6 @@ variable "docdb_deletion_protection" {
   description = "Skip the final snapshot when destroying the DocumentDB cluster (true for dev, false for prod)"
   type        = bool
   default     = true
-}
-
-variable "docdb_final_snapshot_identifier" {
-  description = "Name of the final snapshot taken on destroy (required when docdb_skip_final_snapshot is false)"
-  type        = string
-  default     = null
 }
 
 variable "docdb_snapshot_identifier" {
