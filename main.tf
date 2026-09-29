@@ -178,7 +178,7 @@ module "client_website_bucket" {
   bucket_name = var.client_website_bucket_name
   environment = terraform.workspace
 
-  force_destroy = var.force_destroy
+  force_destroy = var.force_destroy_websites
 
   domain_aliases  = var.client_website_domains
   certificate_arn = aws_acm_certificate_validation.websites.certificate_arn
@@ -190,7 +190,7 @@ module "restaurant_website_bucket" {
   bucket_name = var.restaurant_website_bucket_name
   environment = terraform.workspace
 
-  force_destroy = var.force_destroy
+  force_destroy = var.force_destroy_websites
 
   domain_aliases  = var.restaurant_website_domains
   certificate_arn = aws_acm_certificate_validation.websites.certificate_arn
@@ -202,7 +202,7 @@ module "admin_website_bucket" {
   bucket_name = var.admin_website_bucket_name
   environment = terraform.workspace
 
-  force_destroy = var.force_destroy
+  force_destroy = var.force_destroy_websites
 
   domain_aliases  = var.admin_website_domains
   certificate_arn = aws_acm_certificate_validation.websites.certificate_arn
@@ -357,7 +357,7 @@ module "ecr" {
   mutability      = var.ecr_repository_mutability
   retention_count = var.ecr_repository_retention_count
   environment     = terraform.workspace
-  force_destroy   = var.force_destroy
+  force_destroy   = var.force_destroy_ecr
 }
 
 module "ecs_chopme_backend" {
@@ -402,7 +402,7 @@ module "backend_public_bucket" {
 
   bucket_name   = var.s3_public_bucket_name
   environment   = terraform.workspace
-  force_destroy = var.force_destroy
+  force_destroy = var.force_destroy_public_s3_backend_bucket
 
   cors_allowed_origins = ["*"]
 

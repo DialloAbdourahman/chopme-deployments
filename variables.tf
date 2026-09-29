@@ -155,7 +155,17 @@ variable "ecs_service_autoscaling_scale_out_cooldown" {
   default     = 60
 }
 
-variable "force_destroy" {
+variable "force_destroy_websites" {
+  description = "Name of the cluster"
+  type        = bool
+}
+
+variable "force_destroy_ecr" {
+  description = "Name of the cluster"
+  type        = bool
+}
+
+variable "force_destroy_public_s3_backend_bucket" {
   description = "Name of the cluster"
   type        = bool
 }
