@@ -405,6 +405,7 @@ module "backend_public_bucket" {
   force_destroy = var.force_destroy_public_s3_backend_bucket
 
   cors_allowed_origins = ["*"]
+  enable_versioning = true
 
   block_public_access = false
   bucket_policy = jsonencode({
