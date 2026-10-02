@@ -432,7 +432,7 @@ module "backend_target_group" {
   target_group_name              = "chopme-${terraform.workspace}-backend-tg"
   target_group_port              = var.ecs_task_definition_container_port
   target_group_protocol          = "HTTP"
-  target_group_health_check_path = "/api"
+  target_group_health_check_path = "/api/health"
   target_type                    = "ip"
 }
 
