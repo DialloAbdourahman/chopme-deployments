@@ -87,8 +87,6 @@ module "chopme_backend_role" {
   policy_arns = [
     "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
   ]
-
-
 }
 
 # Role assumed by the running containers (task role)
@@ -395,7 +393,7 @@ module "ecs_chopme_backend" {
 }
 
 # ============================================================
-# S3 BUCKET (backend images, public read via bucket policy)
+# S3 BUCKET and GATEWAY ENDPOINT
 # ============================================================
 module "backend_public_bucket" {
   source = "./modules/s3"
@@ -420,6 +418,16 @@ module "backend_public_bucket" {
       }
     ]
   })
+}
+
+resource "aws_vpc_endpoint" "s3_gateway_endpoint" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+
+  route_table_ids = [ module.public_route_table.route_table_id ]
+
+  tags = { Name = "chopme-${terraform.workspace}-s3-gateway-endpoint" }
 }
 
 # ============================================================
