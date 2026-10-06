@@ -402,7 +402,16 @@ module "backend_public_bucket" {
   environment   = terraform.workspace
   force_destroy = var.force_destroy_public_s3_backend_bucket
 
-  cors_allowed_origins = ["*"]
+  cors_allowed_origins = concat(
+    [for d in var.client_website_domains : "https://${d}"],
+    [for d in var.restaurant_website_domains : "https://${d}"],
+    [for d in var.admin_website_domains : "https://${d}"],
+    [
+      "https://${module.client_website_bucket.cloudfront_domain_name}",
+      "https://${module.restaurant_website_bucket.cloudfront_domain_name}",
+      "https://${module.admin_website_bucket.cloudfront_domain_name}",
+    ],
+  )
   enable_versioning = true
 
   block_public_access = false
