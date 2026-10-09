@@ -13,7 +13,7 @@ provider "aws" {
 }
 
 # ============================================================
-# VPC, SUBNETS and ROUTE TABLES
+# VPC, SUBNETS, NAT GATWAYS and ROUTE TABLES
 # ============================================================
 module "vpc" {
   source = "./modules/vpc"
@@ -28,7 +28,7 @@ module "public_subnet_az1" {
 
   vpc_id                  = module.vpc.vpc_id
   subnet_cidr             = "10.0.0.0/24"
-  subnet_name             = "public_subnet_az1"
+  subnet_name             = "chopme-${terraform.workspace}-public-subnet-az1"
   availability_zone       = var.az1
   map_public_ip_on_launch = true
 }
@@ -38,29 +38,56 @@ module "public_subnet_az2" {
 
   vpc_id                  = module.vpc.vpc_id
   subnet_cidr             = "10.0.1.0/24"
-  subnet_name             = "public_subnet_az2"
+  subnet_name             = "chopme-${terraform.workspace}-public-subnet-az2"
   availability_zone       = var.az2
   map_public_ip_on_launch = true
 }
 
-module "private_subnet_az1" {
+module "private_db_subnet_az1" {
   source = "./modules/subnet"
 
   vpc_id                  = module.vpc.vpc_id
   subnet_cidr             = "10.0.2.0/24"
-  subnet_name             = "private_subnet_az1"
+  subnet_name             = "chopme-${terraform.workspace}-private-db-subnet-az1"
   availability_zone       = var.az1
   map_public_ip_on_launch = false
 }
 
-module "private_subnet_az2" {
+module "private_db_subnet_az2" {
   source = "./modules/subnet"
 
   vpc_id                  = module.vpc.vpc_id
   subnet_cidr             = "10.0.3.0/24"
-  subnet_name             = "private_subnet_az2"
+  subnet_name             = "chopme-${terraform.workspace}-private-db-subnet-az2"
   availability_zone       = var.az2
   map_public_ip_on_launch = false
+}
+
+module "private_compute_subnet_az1" {
+  source = "./modules/subnet"
+
+  vpc_id                  = module.vpc.vpc_id
+  subnet_cidr             = "10.0.4.0/24"
+  subnet_name             = "chopme-${terraform.workspace}-private-compute-subnet-az1"
+  availability_zone       = var.az1
+  map_public_ip_on_launch = false
+}
+
+module "private_compute_subnet_az2" {
+  source = "./modules/subnet"
+
+  vpc_id                  = module.vpc.vpc_id
+  subnet_cidr             = "10.0.5.0/24"
+  subnet_name             = "chopme-${terraform.workspace}-private-compute-subnet-az2"
+  availability_zone       = var.az2
+  map_public_ip_on_launch = false
+}
+
+module "nat_gateway" {
+  source = "./modules/nat-gateway"
+
+  name = "chopme-${terraform.workspace}-nat-gateway"
+  subnet_id = module.public_subnet_az1.subnet_id
 }
 
 module "public_route_table" {
@@ -68,11 +95,32 @@ module "public_route_table" {
 
   vpc_id                 = module.vpc.vpc_id
   igw_id                 = module.vpc.igw_id
-  name                   = "public_route_table"
+  name                   = "chopme-${terraform.workspace}-public-route-table"
   destination_cidr_block = "0.0.0.0/0"
-  vpc_cidr_block         = var.vpc_cidr
   subnet_ids = [
     module.public_subnet_az1.subnet_id, module.public_subnet_az2.subnet_id
+  ]
+}
+
+module "private_db_route_table" {
+  source = "./modules/route-table"
+
+  vpc_id                 = module.vpc.vpc_id
+  name                   = "chopme-${terraform.workspace}-private-db-route-table"
+  subnet_ids = [
+    module.private_db_subnet_az1.subnet_id, module.private_db_subnet_az2.subnet_id
+  ]
+}
+
+module "private_compute_route_table" {
+  source = "./modules/route-table"
+
+  vpc_id                 = module.vpc.vpc_id
+  nat_gateway_id         = module.nat_gateway.nat_gateway_id
+  name                   = "chopme-${terraform.workspace}-private-compute-route-table"
+  destination_cidr_block = "0.0.0.0/0"
+  subnet_ids = [
+    module.private_compute_subnet_az1.subnet_id, module.private_compute_subnet_az2.subnet_id
   ]
 }
 
@@ -361,6 +409,8 @@ module "ecr" {
 module "ecs_chopme_backend" {
   source = "./modules/ecs_task_and_service"
 
+  depends_on = [module.alb]
+
   cluster_name           = var.ecs_cluster_name
   service_name           = var.ecs_service_name
   task_definition_family = var.ecs_task_definition_family
@@ -377,7 +427,7 @@ module "ecs_chopme_backend" {
   execution_role_arn = module.chopme_backend_role.role_arn
   aws_region         = var.aws_region
 
-  subnet_ids         = [module.public_subnet_az1.subnet_id, module.public_subnet_az2.subnet_id]
+  subnet_ids         = [module.private_compute_subnet_az1.subnet_id, module.private_compute_subnet_az2.subnet_id]
   security_group_ids = [module.backend_security_group.security_group_id]
 
   ecs_target_group_arn = module.backend_target_group.target_group_arn
@@ -434,7 +484,7 @@ resource "aws_vpc_endpoint" "s3_gateway_endpoint" {
   service_name      = "com.amazonaws.${var.aws_region}.s3"
   vpc_endpoint_type = "Gateway"
 
-  route_table_ids = [ module.public_route_table.route_table_id ]
+  route_table_ids = [ module.private_compute_route_table.route_table_id ]
 
   tags = { Name = "chopme-${terraform.workspace}-s3-gateway-endpoint" }
 }
@@ -483,7 +533,7 @@ module "documentdb" {
   environment = terraform.workspace
 
   vpc_id     = module.vpc.vpc_id
-  subnet_ids = [module.private_subnet_az1.subnet_id, module.private_subnet_az2.subnet_id]
+  subnet_ids = [module.private_db_subnet_az1.subnet_id, module.private_db_subnet_az2.subnet_id]
 
   allowed_security_group_ids = [module.backend_security_group.security_group_id]
 
