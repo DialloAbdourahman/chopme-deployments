@@ -63,32 +63,32 @@ module "private_db_subnet_az2" {
   map_public_ip_on_launch = false
 }
 
-module "private_compute_subnet_az1" {
-  source = "./modules/subnet"
+# module "private_compute_subnet_az1" {
+#   source = "./modules/subnet"
 
-  vpc_id                  = module.vpc.vpc_id
-  subnet_cidr             = "10.0.4.0/24"
-  subnet_name             = "chopme-${terraform.workspace}-private-compute-subnet-az1"
-  availability_zone       = var.az1
-  map_public_ip_on_launch = false
-}
+#   vpc_id                  = module.vpc.vpc_id
+#   subnet_cidr             = "10.0.4.0/24"
+#   subnet_name             = "chopme-${terraform.workspace}-private-compute-subnet-az1"
+#   availability_zone       = var.az1
+#   map_public_ip_on_launch = false
+# }
 
-module "private_compute_subnet_az2" {
-  source = "./modules/subnet"
+# module "private_compute_subnet_az2" {
+#   source = "./modules/subnet"
 
-  vpc_id                  = module.vpc.vpc_id
-  subnet_cidr             = "10.0.5.0/24"
-  subnet_name             = "chopme-${terraform.workspace}-private-compute-subnet-az2"
-  availability_zone       = var.az2
-  map_public_ip_on_launch = false
-}
+#   vpc_id                  = module.vpc.vpc_id
+#   subnet_cidr             = "10.0.5.0/24"
+#   subnet_name             = "chopme-${terraform.workspace}-private-compute-subnet-az2"
+#   availability_zone       = var.az2
+#   map_public_ip_on_launch = false
+# }
 
-module "nat_gateway" {
-  source = "./modules/nat-gateway"
+# module "nat_gateway" {
+#   source = "./modules/nat-gateway"
 
-  name = "chopme-${terraform.workspace}-nat-gateway"
-  subnet_id = module.public_subnet_az1.subnet_id
-}
+#   name = "chopme-${terraform.workspace}-nat-gateway"
+#   subnet_id = module.public_subnet_az1.subnet_id
+# }
 
 module "public_route_table" {
   source = "./modules/route-table"
@@ -112,17 +112,17 @@ module "private_db_route_table" {
   ]
 }
 
-module "private_compute_route_table" {
-  source = "./modules/route-table"
+# module "private_compute_route_table" {
+#   source = "./modules/route-table"
 
-  vpc_id                 = module.vpc.vpc_id
-  nat_gateway_id         = module.nat_gateway.nat_gateway_id
-  name                   = "chopme-${terraform.workspace}-private-compute-route-table"
-  destination_cidr_block = "0.0.0.0/0"
-  subnet_ids = [
-    module.private_compute_subnet_az1.subnet_id, module.private_compute_subnet_az2.subnet_id
-  ]
-}
+#   vpc_id                 = module.vpc.vpc_id
+#   nat_gateway_id         = module.nat_gateway.nat_gateway_id
+#   name                   = "chopme-${terraform.workspace}-private-compute-route-table"
+#   destination_cidr_block = "0.0.0.0/0"
+#   subnet_ids = [
+#     module.private_compute_subnet_az1.subnet_id, module.private_compute_subnet_az2.subnet_id
+#   ]
+# }
 
 # ============================================================
 # ROLES
@@ -427,7 +427,8 @@ module "ecs_chopme_backend" {
   execution_role_arn = module.chopme_backend_role.role_arn
   aws_region         = var.aws_region
 
-  subnet_ids         = [module.private_compute_subnet_az1.subnet_id, module.private_compute_subnet_az2.subnet_id]
+  # subnet_ids         = [module.private_compute_subnet_az1.subnet_id, module.private_compute_subnet_az2.subnet_id]
+  subnet_ids = [module.public_subnet_az1.subnet_id, module.public_subnet_az2.subnet_id]
   security_group_ids = [module.backend_security_group.security_group_id]
 
   ecs_target_group_arn = module.backend_target_group.target_group_arn
@@ -484,7 +485,8 @@ resource "aws_vpc_endpoint" "s3_gateway_endpoint" {
   service_name      = "com.amazonaws.${var.aws_region}.s3"
   vpc_endpoint_type = "Gateway"
 
-  route_table_ids = [ module.private_compute_route_table.route_table_id ]
+  route_table_ids = [ module.public_route_table.route_table_id ]
+  # route_table_ids = [ module.private_compute_route_table.route_table_id ]
 
   tags = { Name = "chopme-${terraform.workspace}-s3-gateway-endpoint" }
 }
