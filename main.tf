@@ -83,7 +83,7 @@ module "private_db_subnet_az2" {
 #   map_public_ip_on_launch = false
 # }
 
-# module "nat_gateway" {
+# module "nat_gateway_az1" {
 #   source = "./modules/nat-gateway"
 
 #   name = "chopme-${terraform.workspace}-nat-gateway"
@@ -116,7 +116,7 @@ module "private_db_route_table" {
 #   source = "./modules/route-table"
 
 #   vpc_id                 = module.vpc.vpc_id
-#   nat_gateway_id         = module.nat_gateway.nat_gateway_id
+#   nat_gateway_id         = module.nat_gateway_az1.nat_gateway_id
 #   name                   = "chopme-${terraform.workspace}-private-compute-route-table"
 #   destination_cidr_block = "0.0.0.0/0"
 #   subnet_ids = [
