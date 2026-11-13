@@ -65,7 +65,7 @@ output "ecr_repository_url" {
 }
 
 output "ecs_cluster_name" {
-  value       = module.ecs_chopme_backend.cluster_name
+  value       = module.ecs_cluster.cluster_name
   description = "ECS cluster name"
 }
 

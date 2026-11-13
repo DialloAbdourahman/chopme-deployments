@@ -406,12 +406,19 @@ module "ecr" {
   force_destroy   = var.force_destroy_ecr
 }
 
+module "ecs_cluster" {
+  source = "./modules/ecs_cluster"
+
+  cluster_name = var.ecs_cluster_name
+}
+
 module "ecs_chopme_backend" {
   source = "./modules/ecs_task_and_service"
 
   depends_on = [module.alb]
 
-  cluster_name           = var.ecs_cluster_name
+  cluster_name           = module.ecs_cluster.cluster_name
+  cluster_id             = module.ecs_cluster.cluster_id
   service_name           = var.ecs_service_name
   task_definition_family = var.ecs_task_definition_family
   container_name         = var.ecs_task_definition_container_name

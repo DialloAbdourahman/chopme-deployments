@@ -1,7 +1,3 @@
-resource "aws_ecs_cluster" "this" {
-  name = var.cluster_name
-}
-
 resource "aws_cloudwatch_log_group" "this" {
   name              = "/ecs/${var.task_definition_family}"
   retention_in_days = var.log_retention_days
@@ -35,7 +31,7 @@ resource "aws_ecs_task_definition" "this" {
 
 resource "aws_ecs_service" "this" {
   name            = var.service_name
-  cluster         = aws_ecs_cluster.this.id
+  cluster         = var.cluster_id
   task_definition = aws_ecs_task_definition.this.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
@@ -62,7 +58,7 @@ resource "aws_appautoscaling_target" "this" {
 
   max_capacity       = var.autoscaling_max_capacity
   min_capacity       = var.autoscaling_min_capacity
-  resource_id        = "service/${aws_ecs_cluster.this.name}/${aws_ecs_service.this.name}"
+  resource_id        = "service/${var.cluster_name}/${aws_ecs_service.this.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
 }

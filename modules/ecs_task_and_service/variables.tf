@@ -3,6 +3,11 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "cluster_id" {
+  description = "ECS cluster ID or ARN the service runs in"
+  type        = string
+}
+
 variable "service_name" {
   description = "ECS service name"
   type        = string
